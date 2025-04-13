@@ -31,7 +31,7 @@ app.get('/auth/instagram/callback', async (req, res) => {
         form.append('client_id', process.env.INSTAGRAM_CLIENT_ID);
         form.append('client_secret', process.env.INSTAGRAM_CLIENT_SECRET);        
         form.append('grant_type', 'authorization_code');
-        form.append('redirect_uri', `https://b677-117-96-40-3.ngrok-free.app/auth/instagram/callback`);
+        form.append('redirect_uri', `${process.env.BASE_URL}/auth/instagram/callback`);
         form.append('code', code);
 
         const tokenResponse = await axios.post('https://api.instagram.com/oauth/access_token', form, {
@@ -41,17 +41,15 @@ app.get('/auth/instagram/callback', async (req, res) => {
         const { access_token, user_id } = tokenResponse.data;
 
         // Optional: Get long-lived token
-        const longLivedToken = await axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=5054684f30d2eeeb766f1df200f61080&access_token=${access_token}`);
+        const longLivedToken = await axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&access_token=${access_token}`);
 
-        // Fetch user profile
-        const userResponse = await axios.get(`https://graph.instagram.com/${user_id}?fields=id,username&access_token=${access_token}`);
 
         // Redirect back to frontend with token
-        res.redirect(`${process.env.FRONTEND_URL}/login-success?token=${longLivedToken.data.access_token}&user=${encodeURIComponent(JSON.stringify(userResponse.data))}`);
+        res.redirect(`${process.env.FRONTEND_URL}/login-success?token=${longLivedToken.data.access_token}`);
 
     } catch (error) {
         console.error('Instagram auth error:', error.response?.data || error.message);
-        res.redirect(`${process.env.FRONTEND_URL}/login-error`);
+        res.redirect(`${process.env.FRONTEND_URL}`);
     }
 });
 
